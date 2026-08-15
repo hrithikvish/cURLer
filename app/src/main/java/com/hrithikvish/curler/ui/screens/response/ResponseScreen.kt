@@ -123,13 +123,20 @@ private fun ResponseContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
+                            .background(
+                                color = MaterialTheme.colorScheme.surfaceVariant,
+                                shape = RoundedCornerShape(18.dp)
+                            )
                             .padding(14.dp),
                     ) {
                         if (response.isBodyJson) {
                             JsonText(rawJson = response.body)
                         } else {
-                            Text(text = response.body, style = codeMono, color = MaterialTheme.colorScheme.onSurface)
+                            Text(
+                                text = response.body,
+                                style = codeMono,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 } else {

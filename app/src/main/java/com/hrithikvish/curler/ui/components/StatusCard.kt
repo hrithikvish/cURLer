@@ -35,7 +35,7 @@ fun StatusCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(24.dp))
             .background(colors.inverseSurface)
             .padding(20.dp),
     ) {
