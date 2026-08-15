@@ -2,7 +2,9 @@
 
 package com.hrithikvish.curler.ui.screens.review
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,15 +29,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +50,9 @@ import com.hrithikvish.curler.R
 import com.hrithikvish.curler.data.model.HttpMethod
 import com.hrithikvish.curler.data.model.HttpRequestModel
 import com.hrithikvish.curler.data.query.QueryParamsParser
+import com.hrithikvish.curler.ui.components.CurlerFab
 import com.hrithikvish.curler.ui.components.EmptyState
+import com.hrithikvish.curler.ui.components.FabBottomClearance
 import com.hrithikvish.curler.ui.components.JsonText
 import com.hrithikvish.curler.ui.components.KeyValueList
 import com.hrithikvish.curler.ui.components.MethodChip
@@ -52,7 +61,9 @@ import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.PillShape
 import com.hrithikvish.curler.ui.theme.SignalSuccess
 import com.hrithikvish.curler.ui.theme.codeMono
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 private enum class ReviewTab { Headers, Body, Query }
 
@@ -124,7 +135,7 @@ private fun ReviewContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onSend, containerColor = MaterialTheme.colorScheme.primary) {
+            CurlerFab(onClick = onSend) {
                 if (isSending) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
@@ -136,6 +147,7 @@ private fun ReviewContent(
                         painter = painterResource(R.drawable.ic_send_plane),
                         contentDescription = stringResource(R.string.review_cd_send),
                         tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(20.dp),
                     )
                 }
             }
@@ -152,29 +164,51 @@ private fun ReviewContent(
                 onSelect = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             )
-            UrlCard(request = request, modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp))
+            UrlCard(
+                request = request,
+                modifier = Modifier.padding(
+                    start = 20.dp,
+                    end = 20.dp,
+                    bottom = 16.dp
+                )
+            )
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
             ) { page ->
+                val tabContentModifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 20.dp, end = 20.dp, bottom = FabBottomClearance)
                 when (ReviewTab.entries[page]) {
-                    ReviewTab.Headers -> HeadersContent(request.headers, modifier = Modifier.padding(horizontal = 20.dp))
-                    ReviewTab.Body -> BodyContent(request.body, modifier = Modifier.padding(horizontal = 20.dp))
-                    ReviewTab.Query -> QueryContent(request.url, modifier = Modifier.padding(horizontal = 20.dp))
+                    ReviewTab.Headers -> HeadersContent(request.headers, modifier = tabContentModifier)
+                    ReviewTab.Body -> BodyContent(request.body, modifier = tabContentModifier)
+                    ReviewTab.Query -> QueryContent(request.url, modifier = tabContentModifier)
                 }
             }
         }
     }
 }
 
+private const val UrlCardAutoCollapseDelayMillis = 1000L
+private const val UrlCardCollapsedMaxLines = 2
+
 @Composable
 private fun UrlCard(request: HttpRequestModel, modifier: Modifier = Modifier) {
+    var isExpanded by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(UrlCardAutoCollapseDelayMillis.milliseconds)
+        isExpanded = false
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clickable { isExpanded = !isExpanded }
+            .animateContentSize()
             .padding(horizontal = 14.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -183,6 +217,8 @@ private fun UrlCard(request: HttpRequestModel, modifier: Modifier = Modifier) {
             text = request.url.removePrefix("https://").removePrefix("http://"),
             style = codeMono.copy(fontSize = 12.sp, fontWeight = FontWeight.Medium),
             color = MaterialTheme.colorScheme.onSurface,
+            maxLines = if (isExpanded) Int.MAX_VALUE else UrlCardCollapsedMaxLines,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
