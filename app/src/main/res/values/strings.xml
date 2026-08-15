@@ -41,6 +41,13 @@
     <string name="body_mode_none">None</string>
     <string name="body_form_stub">Form-encoded bodies are coming soon.</string>
     <string name="url_placeholder">https://api.example.com/...</string>
+    <string name="cd_url_quick_insert">Insert %1$s into URL</string>
+    <string-array name="url_quick_inserts">
+        <item>https://</item>
+        <item>http://</item>
+        <item>.com</item>
+        <item>/</item>
+    </string-array>
     <string name="json_body_placeholder">{\n  \"key\": \"value\"\n}</string>
     <string name="action_continue_review">Continue to review</string>
     <string name="error_url_required">URL is required</string>

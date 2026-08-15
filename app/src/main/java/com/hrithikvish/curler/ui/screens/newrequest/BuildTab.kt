@@ -33,15 +33,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,7 +96,29 @@ fun BuildTab(
             )
 
             FieldLabel(stringResource(R.string.field_label_url))
-            UrlField(value = uiState.buildUrl, onValueChange = onUrlChange)
+            var urlFieldValue by remember {
+                mutableStateOf(TextFieldValue(
+                    text = uiState.buildUrl,
+                    selection = TextRange(uiState.buildUrl.length)
+                ))
+            }
+            UrlField(
+                value = urlFieldValue,
+                onValueChange = { new ->
+                    urlFieldValue = new
+                    if (new.text != uiState.buildUrl) onUrlChange(new.text)
+                },
+            )
+            UrlQuickInsertRow(
+                onInsert = { snippet ->
+                    val current = urlFieldValue
+                    val newText = current.text.replaceRange(current.selection.min, current.selection.max, snippet)
+                    val newCursor = current.selection.min + snippet.length
+                    urlFieldValue = TextFieldValue(text = newText, selection = TextRange(newCursor))
+                    onUrlChange(newText)
+                },
+                modifier = Modifier.padding(bottom = 12.dp),
+            )
             if (uiState.buildError != null) {
                 Text(
                     text = stringResource(buildErrorMessageRes(uiState.buildError)),
@@ -302,7 +330,7 @@ private fun FieldLabel(text: String) {
 }
 
 @Composable
-private fun UrlField(value: String, onValueChange: (String) -> Unit) {
+private fun UrlField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Unit) {
     val focusRequester = remember { FocusRequester() }
     Box(
         modifier = Modifier
@@ -319,7 +347,7 @@ private fun UrlField(value: String, onValueChange: (String) -> Unit) {
             cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
             modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
             decorationBox = { innerTextField ->
-                if (value.isEmpty()) {
+                if (value.text.isEmpty()) {
                     Text(
                         text = stringResource(R.string.url_placeholder),
                         style = codeMono.copy(fontSize = 11.5.sp),
@@ -330,7 +358,45 @@ private fun UrlField(value: String, onValueChange: (String) -> Unit) {
             },
         )
     }
-    Spacer(Modifier.height(18.dp))
+    Spacer(Modifier.height(8.dp))
+}
+
+@Composable
+private fun UrlQuickInsertRow(
+    onInsert: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val snippets = stringArrayResource(R.array.url_quick_inserts)
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        snippets.forEach { snippet ->
+            UrlQuickInsertChip(text = snippet, onClick = { onInsert(snippet) })
+        }
+    }
+}
+
+@Composable
+private fun UrlQuickInsertChip(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(SelectorChipShape)
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant,
+                shape = SelectorChipShape,
+            )
+            .clickable(onClickLabel = stringResource(R.string.cd_url_quick_insert, text), onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = codeMono.copy(fontSize = 11.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
 }
 
 @Preview(showBackground = true, heightDp = 700)
