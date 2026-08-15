@@ -1,3 +1,74 @@
 <resources>
     <string name="app_name">cURLer</string>
+
+    <!-- shared -->
+    <string name="cd_back">Back</string>
+
+    <!-- home -->
+    <string name="home_title">cURLer</string>
+    <string name="home_search_placeholder">Search requests</string>
+    <string name="home_empty_title_no_requests">No requests yet</string>
+    <string name="home_empty_description_no_requests">Tap + to build or paste your first request.</string>
+    <string name="home_empty_title_no_matches">No matches</string>
+    <string name="home_empty_description_no_matches">Try a different search.</string>
+    <string name="home_cd_new_request">New request</string>
+    <string name="home_cd_more_options">More options</string>
+    <string name="home_action_delete">Delete</string>
+    <string name="home_status_error">error</string>
+    <string name="home_relative_just_now">just now</string>
+    <string name="home_relative_minutes_ago">%d min ago</string>
+    <string name="home_relative_hours_ago">%d hr ago</string>
+    <string name="home_relative_yesterday">yesterday</string>
+    <string name="home_relative_days_ago">%d days ago</string>
+
+    <!-- new request -->
+    <string name="new_request_title">New request</string>
+    <string name="tab_paste_curl">Paste curl</string>
+    <string name="tab_build_manually">Build manually</string>
+    <string name="paste_hint_label">PASTE CURL COMMAND</string>
+    <string name="cd_paste_from_clipboard">Paste from clipboard</string>
+    <string name="paste_placeholder">curl -X POST https://api.example.com/orders \\\n  -H \"Content-Type: application/json\" \\\n  -d \'{\"item\":\"sku_123\"}\'</string>
+    <string name="action_parse_validate">Parse &amp; validate</string>
+    <string name="field_label_url">URL</string>
+    <string name="field_label_headers">HEADERS</string>
+    <string name="field_label_body">BODY</string>
+    <string name="header_name_placeholder">Header name</string>
+    <string name="header_value_placeholder">Value</string>
+    <string name="cd_remove_header">Remove header</string>
+    <string name="action_add_header">Add header</string>
+    <string name="body_mode_json">JSON</string>
+    <string name="body_mode_form">Form</string>
+    <string name="body_mode_none">None</string>
+    <string name="body_form_stub">Form-encoded bodies are coming soon.</string>
+    <string name="url_placeholder">https://api.example.com/...</string>
+    <string name="json_body_placeholder">{\n  \"key\": \"value\"\n}</string>
+    <string name="action_continue_review">Continue to review</string>
+    <string name="error_url_required">URL is required</string>
+    <string name="error_url_scheme">URL should start with http:// or https://</string>
+
+    <!-- review -->
+    <string name="review_title">Request</string>
+    <string name="review_valid_badge">VALID</string>
+    <string name="review_tab_headers">Headers</string>
+    <string name="review_tab_body">Body</string>
+    <string name="review_tab_query">Query</string>
+    <string name="review_cd_send">Send request</string>
+    <string name="review_empty_headers_title">No headers</string>
+    <string name="review_empty_headers_desc">This request has no headers.</string>
+    <string name="review_empty_body_title">No body</string>
+    <string name="review_empty_body_desc">This request has no body.</string>
+    <string name="review_empty_query_title">No query params</string>
+    <string name="review_empty_query_desc">This URL has no query string.</string>
+
+    <!-- response -->
+    <string name="response_title">Response</string>
+    <string name="response_cd_copy">Copy</string>
+    <string name="response_status_success">SUCCESS</string>
+    <string name="response_status_error">ERROR</string>
+    <string name="response_meta_duration">%d ms</string>
+    <string name="response_meta_size_bytes">%d B</string>
+    <string name="response_meta_size_kb">%.1f KB</string>
+    <string name="response_error_title">Request failed</string>
+    <string name="response_error_description_fallback">Something went wrong while sending this request.</string>
+    <string name="response_empty_body">No body to show</string>
 </resources>
