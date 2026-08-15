@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "65458384131",
+    "project_id": "curler-1098e",
+    "storage_bucket": "curler-1098e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:65458384131:android:4faac751a692939deb8d36",
+        "android_client_info": {
+          "package_name": "com.hrithikvish.curler"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-g0IIwDdQVp_c8v2HSNmNIbS2pNijhdw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
