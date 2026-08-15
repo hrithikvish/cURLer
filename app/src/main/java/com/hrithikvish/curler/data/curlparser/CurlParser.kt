@@ -60,7 +60,12 @@ object CurlParser {
                 }
                 else -> {
                     if (!t.startsWith("-") && url == null) {
-                        url = t
+                        val urlParts = mutableListOf(t)
+                        while (i + 1 < tokens.size && !tokens[i + 1].startsWith("-")) {
+                            i++
+                            urlParts.add(tokens[i])
+                        }
+                        url = urlParts.joinToString(" ")
                     }
                 }
             }

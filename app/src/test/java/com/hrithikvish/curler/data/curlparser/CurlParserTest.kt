@@ -148,4 +148,14 @@ class CurlParserTest {
         assertEquals(HttpMethod.POST, result.method)
         assertEquals("post", result.rawMethod)
     }
+
+    @Test
+    fun `unquoted spaces in URL are rejoined up to the next flag`() {
+        val result = CurlParser.parse(
+            "curl -X GET http://x.com/api?model=motorola edge 50 neo&ver=16 -H \"A: 1\"",
+        )
+        require(result is ParsedCurlRequest.Success)
+        assertEquals("http://x.com/api?model=motorola edge 50 neo&ver=16", result.url)
+        assertEquals(listOf("A" to "1"), result.headers)
+    }
 }
