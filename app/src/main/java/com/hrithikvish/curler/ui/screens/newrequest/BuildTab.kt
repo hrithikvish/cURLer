@@ -6,10 +6,12 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,10 +21,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -34,7 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
@@ -54,6 +56,7 @@ import com.hrithikvish.curler.ui.theme.PillShape
 import com.hrithikvish.curler.ui.theme.codeMono
 
 private val BUILD_TAB_METHODS = listOf(HttpMethod.GET, HttpMethod.POST, HttpMethod.PUT, HttpMethod.DELETE)
+private val SelectorChipShape = RoundedCornerShape(8.dp)
 
 private fun buildErrorMessageRes(error: BuildUrlError): Int = when (error) {
     BuildUrlError.REQUIRED -> R.string.error_url_required
@@ -74,132 +77,152 @@ fun BuildTab(
     onContinue: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp),
     ) {
-        MethodSelectorRow(
-            options = BUILD_TAB_METHODS,
-            selected = uiState.buildMethod,
-            onSelect = onMethodChange,
-            modifier = Modifier.padding(bottom = 18.dp),
-        )
-
-        FieldLabel(stringResource(R.string.field_label_url))
-        UrlField(value = uiState.buildUrl, onValueChange = onUrlChange)
-        if (uiState.buildError != null) {
-            Text(
-                text = stringResource(buildErrorMessageRes(uiState.buildError)),
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(bottom = 12.dp),
+        item {
+            MethodSelectorRow(
+                options = BUILD_TAB_METHODS,
+                selected = uiState.buildMethod,
+                onSelect = onMethodChange,
+                modifier = Modifier.padding(bottom = 18.dp),
             )
+
+            FieldLabel(stringResource(R.string.field_label_url))
+            UrlField(value = uiState.buildUrl, onValueChange = onUrlChange)
+            if (uiState.buildError != null) {
+                Text(
+                    text = stringResource(buildErrorMessageRes(uiState.buildError)),
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 12.dp),
+                )
+            }
+
+            FieldLabel(stringResource(R.string.field_label_headers))
         }
 
-        FieldLabel(stringResource(R.string.field_label_headers))
-        uiState.buildHeaders.forEachIndexed { index, header ->
+        itemsIndexed(
+            items = uiState.buildHeaders,
+            key = { _, header -> header.id }
+        ) { index, header ->
             HeaderEditRow(
                 keyText = header.key,
                 valueText = header.value,
                 onKeyChange = { onHeaderKeyChange(index, it) },
                 onValueChange = { onHeaderValueChange(index, it) },
                 onDelete = { onRemoveHeader(index) },
-                modifier = Modifier.padding(bottom = 8.dp),
-            )
-        }
-        Row(
-            modifier = Modifier
-                .clickable(onClick = onAddHeader)
-                .padding(vertical = 9.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(14.dp),
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(
-                text = stringResource(R.string.action_add_header),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .animateItem()
+                    .padding(bottom = 8.dp),
             )
         }
 
-        AnimatedVisibility(
-            visible = uiState.buildMethod != HttpMethod.GET,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-        ) {
-            Column {
-                Spacer(Modifier.height(14.dp))
-                FieldLabel(stringResource(R.string.field_label_body))
-                SegmentedControl(
-                    options = listOf(
-                        stringResource(R.string.body_mode_json),
-                        stringResource(R.string.body_mode_form),
-                        stringResource(R.string.body_mode_none),
-                    ),
-                    selectedIndex = uiState.buildBodyMode.ordinal,
-                    onSelect = { onBodyModeChange(BodyMode.entries[it]) },
-                    modifier = Modifier.padding(bottom = 12.dp),
+        item {
+            Row(
+                modifier = Modifier
+                    .clickable(onClick = onAddHeader)
+                    .padding(vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(14.dp),
                 )
-                when (uiState.buildBodyMode) {
-                    BodyMode.JSON -> {
-                        val focusRequester = remember { FocusRequester() }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 100.dp)
-                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
-                                .padding(13.dp)
-                                .tapToFocus(focusRequester),
-                        ) {
-                            BasicTextField(
-                                value = uiState.buildBodyJson,
-                                onValueChange = onBodyJsonChange,
-                                textStyle = codeMono.copy(color = MaterialTheme.colorScheme.onSurface),
-                                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                                decorationBox = { innerTextField ->
-                                    if (uiState.buildBodyJson.isEmpty()) {
-                                        Text(
-                                            text = stringResource(R.string.json_body_placeholder),
-                                            style = codeMono,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                    innerTextField()
-                                },
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.action_add_header),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+
+            AnimatedVisibility(
+                visible = uiState.buildMethod != HttpMethod.GET,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Column {
+                    Spacer(Modifier.height(14.dp))
+                    FieldLabel(stringResource(R.string.field_label_body))
+                    SegmentedControl(
+                        options = listOf(
+                            stringResource(R.string.body_mode_json),
+                            stringResource(R.string.body_mode_form),
+                            stringResource(R.string.body_mode_none),
+                        ),
+                        selectedIndex = uiState.buildBodyMode.ordinal,
+                        onSelect = { onBodyModeChange(BodyMode.entries[it]) },
+                        modifier = Modifier.padding(bottom = 12.dp),
+                    )
+                    when (uiState.buildBodyMode) {
+                        BodyMode.JSON -> {
+                            val focusRequester = remember { FocusRequester() }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 100.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = RoundedCornerShape(14.dp)
+                                    )
+                                    .padding(13.dp)
+                                    .tapToFocus(focusRequester),
+                            ) {
+                                BasicTextField(
+                                    value = uiState.buildBodyJson,
+                                    onValueChange = onBodyJsonChange,
+                                    textStyle = codeMono.copy(color = MaterialTheme.colorScheme.onSurface),
+                                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                                    decorationBox = { innerTextField ->
+                                        if (uiState.buildBodyJson.isEmpty()) {
+                                            Text(
+                                                text = stringResource(R.string.json_body_placeholder),
+                                                style = codeMono,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                        innerTextField()
+                                    },
+                                )
+                            }
+                        }
+                        BodyMode.FORM -> {
+                            Text(
+                                text = stringResource(R.string.body_form_stub),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(vertical = 12.dp),
                             )
                         }
+                        BodyMode.NONE -> Unit
                     }
-                    BodyMode.FORM -> {
-                        Text(
-                            text = stringResource(R.string.body_form_stub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(vertical = 12.dp),
-                        )
-                    }
-                    BodyMode.NONE -> Unit
                 }
             }
-        }
 
-        Spacer(Modifier.height(18.dp))
-        Button(
-            onClick = onContinue,
-            shape = PillShape,
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-        ) {
-            Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.action_continue_review), style = MaterialTheme.typography.labelLarge)
+            Spacer(Modifier.height(18.dp))
+            Button(
+                onClick = onContinue,
+                shape = PillShape,
+                modifier = Modifier.fillMaxWidth().height(52.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(id = R.string.action_continue_review),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+            Spacer(Modifier.height(20.dp))
         }
-        Spacer(Modifier.height(20.dp))
     }
 }
 
@@ -212,14 +235,57 @@ private fun MethodSelectorRow(
 ) {
     Row(modifier = modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         options.forEach { method ->
+            SelectableMethodChip(
+                method = method,
+                isSelected = method == selected,
+                onClick = { onSelect(method) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+/**
+ * Selection state is the dominant signal here (full [MethodChip] treatment only when
+ * selected, a plain faint outline otherwise), and taps trigger a springy Material
+ * Expressive-style scale bounce (press shrinks, release/selection overshoots back).
+ */
+@Composable
+private fun SelectableMethodChip(
+    method: HttpMethod,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(SelectorChipShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (isSelected) {
+            MethodChip(
+                method = method,
+                modifier = Modifier.fillMaxWidth()
+            )
+        } else {
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .alpha(if (method == selected) 1f else 0.45f)
-                    .clickable { onSelect(method) },
+                    .fillMaxWidth()
+                    .clip(SelectorChipShape)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        shape = SelectorChipShape
+                    )
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                MethodChip(method = method, modifier = Modifier.fillMaxWidth())
+                Text(
+                    text = method.name,
+                    style = codeMono.copy(fontWeight = FontWeight.Bold, fontSize = 11.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                )
             }
         }
     }

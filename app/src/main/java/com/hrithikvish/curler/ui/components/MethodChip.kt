@@ -2,7 +2,9 @@ package com.hrithikvish.curler.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -18,10 +20,12 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hrithikvish.curler.data.model.HttpMethod
+import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.codeMono
 
 private val ChipShape = RoundedCornerShape(8.dp)
@@ -81,3 +85,20 @@ private fun Modifier.dashedBorder(color: Color, shape: Shape, strokeWidth: Dp = 
         val outline = shape.createOutline(size, layoutDirection, this)
         drawOutline(outline, color = color, style = stroke)
     }
+
+@Preview(showBackground = true)
+@Composable
+fun MethodChipPreview() {
+    CurlerTheme {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            MethodChip(method = HttpMethod.GET)
+            MethodChip(method = HttpMethod.POST)
+            MethodChip(method = HttpMethod.PUT)
+            MethodChip(method = HttpMethod.PATCH)
+            MethodChip(method = HttpMethod.DELETE)
+        }
+    }
+}

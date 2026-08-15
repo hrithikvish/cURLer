@@ -1,14 +1,18 @@
 package com.hrithikvish.curler.ui.screens.newrequest
 
 import com.hrithikvish.curler.data.model.HttpMethod
+import java.util.concurrent.atomic.AtomicLong
 
 enum class NewRequestTab { Paste, Build }
 
 enum class BodyMode { JSON, FORM, NONE }
 
+private val headerIdGenerator = AtomicLong(0)
+
 data class HeaderFieldState(
     val key: String = "",
     val value: String = "",
+    val id: Long = headerIdGenerator.getAndIncrement(),
 )
 
 data class RecentCurlChip(
