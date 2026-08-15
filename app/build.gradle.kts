@@ -1,3 +1,6 @@
+import com.android.build.api.variant.FilterConfiguration.FilterType
+import com.android.build.api.variant.impl.VariantOutputImpl
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -45,6 +48,18 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.outputs.forEach { output ->
+            val outputImpl = output as VariantOutputImpl
+            val abi = output.filters.find { it.filterType.toString() == FilterType.ABI.toString() }?.identifier
+            val abiPart = if (abi != null) "_$abi" else ""
+
+            outputImpl.outputFileName = "cURLer_${variant.name}${abiPart}.apk"
+        }
     }
 }
 
