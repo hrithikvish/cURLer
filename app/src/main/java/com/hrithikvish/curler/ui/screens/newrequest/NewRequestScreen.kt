@@ -2,16 +2,12 @@
 
 package com.hrithikvish.curler.ui.screens.newrequest
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,13 +18,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hrithikvish.curler.R
 import com.hrithikvish.curler.ui.components.SegmentedControl
+import kotlinx.coroutines.launch
 
 @Composable
 fun NewRequestScreen(
@@ -39,6 +38,12 @@ fun NewRequestScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val recentChips by viewModel.recentChips.collectAsStateWithLifecycle()
+    val pagerState = rememberPagerState(initialPage = uiState.selectedTab.ordinal) { NewRequestTab.entries.size }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.selectTab(NewRequestTab.entries[pagerState.currentPage])
+    }
 
     Scaffold(
         modifier = modifier,
@@ -56,27 +61,20 @@ fun NewRequestScreen(
         Column(
             modifier = Modifier
                 .padding(padding)
-                .padding(horizontal = 20.dp)
                 .fillMaxSize()
                 .imePadding(),
         ) {
             SegmentedControl(
                 options = listOf(stringResource(R.string.tab_paste_curl), stringResource(R.string.tab_build_manually)),
-                selectedIndex = uiState.selectedTab.ordinal,
-                onSelect = { viewModel.selectTab(NewRequestTab.entries[it]) },
-                modifier = Modifier.padding(vertical = 16.dp),
+                selectedIndex = pagerState.currentPage,
+                onSelect = { index -> scope.launch { pagerState.animateScrollToPage(index) } },
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             )
-            AnimatedContent(
-                targetState = uiState.selectedTab,
-                modifier = Modifier.weight(1f),
-                transitionSpec = {
-                    val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
-                    (slideInHorizontally(initialOffsetX = { it * direction }) + fadeIn()) togetherWith
-                        (slideOutHorizontally(targetOffsetX = { -it * direction }) + fadeOut())
-                },
-                label = "newRequestTabContent",
-            ) { tab ->
-                when (tab) {
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f).fillMaxSize(),
+            ) { page ->
+                when (NewRequestTab.entries[page]) {
                     NewRequestTab.Paste -> PasteTab(
                         text = uiState.pasteText,
                         error = uiState.pasteError,
