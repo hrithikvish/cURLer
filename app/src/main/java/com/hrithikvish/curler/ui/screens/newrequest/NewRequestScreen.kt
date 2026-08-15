@@ -80,7 +80,7 @@ fun NewRequestScreen(
                         error = uiState.pasteError,
                         recentChips = recentChips,
                         onTextChange = viewModel::updatePasteText,
-                        onParse = { if (viewModel.validateAndBuildRequest()) onNavigateToReview() },
+                        onParse = { viewModel.validateAndBuildRequest(onValidated = onNavigateToReview) },
                         onChipClick = viewModel::applyRecentChip,
                         modifier = Modifier.fillMaxSize(),
                     )
@@ -94,7 +94,7 @@ fun NewRequestScreen(
                         onRemoveHeader = viewModel::removeHeaderRow,
                         onBodyModeChange = viewModel::updateBuildBodyMode,
                         onBodyJsonChange = viewModel::updateBuildBodyJson,
-                        onContinue = { if (viewModel.validateAndBuildRequest()) onNavigateToReview() },
+                        onContinue = { viewModel.validateAndBuildRequest(onValidated = onNavigateToReview) },
                         modifier = Modifier.fillMaxSize(),
                     )
                 }

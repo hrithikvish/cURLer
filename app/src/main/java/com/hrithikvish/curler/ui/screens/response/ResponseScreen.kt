@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -24,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ClipEntry
@@ -37,8 +40,11 @@ import com.hrithikvish.curler.data.model.HttpMethod
 import com.hrithikvish.curler.data.model.HttpRequestModel
 import com.hrithikvish.curler.data.model.HttpResponseModel
 import com.hrithikvish.curler.ui.components.EmptyState
+import com.hrithikvish.curler.ui.components.JsonLoadingIndicator
 import com.hrithikvish.curler.ui.components.JsonText
 import com.hrithikvish.curler.ui.components.StatusCard
+import com.hrithikvish.curler.ui.components.isLargeBody
+import com.hrithikvish.curler.ui.components.rememberJsonLines
 import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.SignalError
 import com.hrithikvish.curler.ui.theme.codeMono
@@ -97,58 +103,130 @@ private fun ResponseContent(
             )
         },
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(horizontal = 20.dp)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        ) {
-            if (response != null) {
-                val isSuccess = response.statusCode in 200..299
-                StatusCard(
-                    isSuccess = isSuccess,
-                    statusLabel = stringResource(
-                        if (isSuccess) R.string.response_status_success else R.string.response_status_error,
-                    ),
-                    statusCode = "${response.statusCode} ${response.statusMessage}",
-                    metaItems = listOf(
-                        stringResource(R.string.response_meta_duration, response.durationMs),
-                        formatSize(response.sizeBytes),
-                        "${request.method.name} ${pathOf(request.url)}",
-                    ),
+        val baseModifier = Modifier
+            .padding(padding)
+            .padding(horizontal = 20.dp)
+            .fillMaxSize()
+
+        if (response != null && isLargeBody(response.body)) {
+            Column(modifier = baseModifier) {
+                ResponseStatusCard(
+                    request = request,
+                    response = response,
                     modifier = Modifier.padding(vertical = 16.dp),
                 )
-                if (response.body.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                shape = RoundedCornerShape(18.dp)
-                            )
-                            .padding(14.dp),
-                    ) {
-                        if (response.isBodyJson) {
-                            JsonText(rawJson = response.body)
-                        } else {
-                            Text(
-                                text = response.body,
-                                style = codeMono,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    }
-                } else {
-                    EmptyState(title = stringResource(R.string.response_empty_body), description = "")
-                }
-            } else {
-                ErrorState(
-                    message = errorMessage ?: stringResource(R.string.response_error_description_fallback),
-                    modifier = Modifier.padding(top = 16.dp),
+                LargeResponseBody(
+                    body = response.body,
+                    isJson = response.isBodyJson,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
                 )
             }
-            Spacer(Modifier.height(20.dp))
+        } else {
+            Column(modifier = baseModifier.verticalScroll(rememberScrollState())) {
+                if (response != null) {
+                    ResponseStatusCard(
+                        request = request,
+                        response = response,
+                        modifier = Modifier.padding(vertical = 16.dp),
+                    )
+                    if (response.body.isNotEmpty()) {
+                        SmallResponseBody(body = response.body, isJson = response.isBodyJson)
+                    } else {
+                        EmptyState(title = stringResource(R.string.response_empty_body), description = "")
+                    }
+                } else {
+                    ErrorState(
+                        message = errorMessage ?: stringResource(R.string.response_error_description_fallback),
+                        modifier = Modifier.padding(top = 16.dp),
+                    )
+                }
+                Spacer(Modifier.height(20.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResponseStatusCard(
+    request: HttpRequestModel,
+    response: HttpResponseModel,
+    modifier: Modifier = Modifier,
+) {
+    val isSuccess = response.statusCode in 200..299
+    StatusCard(
+        isSuccess = isSuccess,
+        statusLabel = stringResource(
+            if (isSuccess) R.string.response_status_success else R.string.response_status_error,
+        ),
+        statusCode = "${response.statusCode} ${response.statusMessage}",
+        metaItems = listOf(
+            stringResource(R.string.response_meta_duration, response.durationMs),
+            formatSize(response.sizeBytes),
+            "${request.method.name} ${pathOf(request.url)}",
+        ),
+        modifier = modifier,
+    )
+}
+
+/** Compact, content-sized body card — only for bodies under [isLargeBody]'s threshold. */
+@Composable
+private fun SmallResponseBody(body: String, isJson: Boolean, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(18.dp))
+            .padding(14.dp),
+    ) {
+        if (isJson) {
+            JsonText(rawJson = body)
+        } else {
+            Text(text = body, style = codeMono, color = MaterialTheme.colorScheme.onSurface)
+        }
+    }
+}
+
+/**
+ * Line-virtualized body card for large responses — a single `Text` node over
+ * tens of KB is what was freezing the screen on open, so this renders one
+ * `LazyColumn` item per line instead and requires a bounded-height [modifier]
+ * (e.g. `Modifier.weight(1f)` in an enclosing `Column`).
+ */
+@Composable
+private fun LargeResponseBody(body: String, isJson: Boolean, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(18.dp)),
+    ) {
+        if (isJson) {
+            val lines = rememberJsonLines(body)
+            if (lines == null) {
+                JsonLoadingIndicator(modifier = Modifier.fillMaxSize())
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                    items(lines.size) { index ->
+                        Text(
+                            text = lines[index],
+                            style = codeMono,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+        } else {
+            val lines = remember(body) { body.lines() }
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                items(lines.size) { index ->
+                    Text(
+                        text = lines[index],
+                        style = codeMono,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
         }
     }
 }
