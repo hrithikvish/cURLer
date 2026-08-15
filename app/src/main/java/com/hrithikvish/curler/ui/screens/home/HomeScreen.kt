@@ -1,9 +1,10 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 
 package com.hrithikvish.curler.ui.screens.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,6 +58,7 @@ import com.hrithikvish.curler.data.model.HistoryEntry
 import com.hrithikvish.curler.data.model.HttpMethod
 import com.hrithikvish.curler.data.model.HttpRequestModel
 import com.hrithikvish.curler.data.model.HttpResponseModel
+import com.hrithikvish.curler.ui.components.CurlerFab
 import com.hrithikvish.curler.ui.components.EmptyState
 import com.hrithikvish.curler.ui.components.MethodChip
 import com.hrithikvish.curler.ui.components.tapToFocus
@@ -113,15 +113,9 @@ private fun HomeContent(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddRequest,
-                modifier = Modifier.size(64.dp),
-                shape = RoundedCornerShape(24.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
+            CurlerFab(onClick = onAddRequest) {
                 Icon(
-                    Icons.Filled.Add,
+                    imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(R.string.home_cd_new_request),
                     modifier = Modifier.size(28.dp),
                 )
@@ -224,7 +218,10 @@ private fun HistoryRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = { menuExpanded = true }
+            )
             .padding(vertical = 13.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

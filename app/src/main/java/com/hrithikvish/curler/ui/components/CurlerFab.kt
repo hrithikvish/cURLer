@@ -3,20 +3,20 @@ package com.hrithikvish.curler.ui.components
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
-/** Shared large rounded-square FAB style reused across screens (Home's "+", New Request's "check"). */
+/** Bottom inset scrollable tab content should reserve so its last item isn't hidden behind [CurlerFab]. */
+val FabBottomClearance = 96.dp
+
+/** Shared large rounded-square FAB style reused across screens (Home's "+", Review's "send"). */
 @Composable
 fun CurlerFab(
     onClick: () -> Unit,
-    icon: ImageVector,
-    contentDescription: String?,
     modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
 ) {
     FloatingActionButton(
         onClick = onClick,
@@ -24,11 +24,6 @@ fun CurlerFab(
         shape = RoundedCornerShape(24.dp),
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            modifier = Modifier.size(28.dp),
-        )
-    }
+        content = content,
+    )
 }
