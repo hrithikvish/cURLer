@@ -66,6 +66,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hrithikvish.curler.R
 import com.hrithikvish.curler.data.model.ChangelogEntry
+import com.hrithikvish.curler.data.update.UpdateState
+import com.hrithikvish.curler.ui.components.UpdateDisplay
+import com.hrithikvish.curler.ui.components.UpdateStateIcon
+import com.hrithikvish.curler.ui.components.updateDisplayFor
 import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.PillShape
 import com.hrithikvish.curler.ui.theme.codeMono
@@ -99,13 +103,19 @@ fun AboutScreen(
     viewModel: AboutViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    AboutContent(uiState = uiState, onBack = onBack, modifier = modifier)
+    AboutContent(
+        uiState = uiState,
+        onBack = onBack,
+        onUpdateAction = viewModel::onUpdateAction,
+        modifier = modifier,
+    )
 }
 
 @Composable
 private fun AboutContent(
     uiState: AboutUiState,
     onBack: () -> Unit,
+    onUpdateAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -144,6 +154,8 @@ private fun AboutContent(
                 .fillMaxWidth(),
         ) {
             AppIdentity(versionName = uiState.versionName, versionCode = uiState.versionCode)
+
+            UpdateRow(display = updateDisplayFor(uiState.updateState), onAction = onUpdateAction)
 
             if (uiState.changelogEntries.isNotEmpty()) {
                 SectionLabel(stringResource(R.string.about_changelog_label))
@@ -226,6 +238,53 @@ private fun AppIdentity(versionName: String, versionCode: Int, modifier: Modifie
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .padding(horizontal = 12.dp, vertical = 5.dp),
         )
+    }
+}
+
+@Composable
+private fun UpdateRow(display: UpdateDisplay?, onAction: () -> Unit, modifier: Modifier = Modifier) {
+    if (display == null) return
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 20.dp)
+            .clip(CardShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .padding(horizontal = CardRowHorizontalPadding, vertical = CardRowVerticalPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(13.dp),
+    ) {
+        UpdateStateIcon(
+            icon = display.icon,
+            tint = MaterialTheme.colorScheme.onSurface,
+            trackTint = MaterialTheme.colorScheme.outlineVariant,
+            modifier = Modifier.size(18.dp),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = display.title,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = display.subtitle,
+                style = codeMono.copy(fontSize = 10.5.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+        }
+        if (display.actionLabel != null) {
+            Text(
+                text = display.actionLabel,
+                style = codeMono.copy(fontSize = 11.5.sp, fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .clip(PillShape)
+                    .background(MaterialTheme.colorScheme.onSurface)
+                    .clickable(onClick = onAction)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            )
+        }
     }
 }
 
@@ -552,6 +611,7 @@ private fun AboutScreenPreview() {
         AboutContent(
             uiState = AboutUiState(versionName = "1.0", versionCode = 1),
             onBack = {},
+            onUpdateAction = {},
         )
     }
 }
@@ -563,6 +623,20 @@ private fun AboutScreenTallPreview() {
         AboutContent(
             uiState = AboutUiState(versionName = "1.0", versionCode = 1),
             onBack = {},
+            onUpdateAction = {},
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun AboutScreenUpdateAvailablePreview() {
+    CurlerTheme {
+        AboutContent(
+            uiState = AboutUiState(versionName = "1.0", versionCode = 1, updateState = UpdateState.Available(2)),
+            onBack = {},
+            onUpdateAction = {},
+        )
+    }
+}
+

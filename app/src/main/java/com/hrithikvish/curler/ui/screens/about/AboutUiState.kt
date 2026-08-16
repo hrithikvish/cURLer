@@ -3,6 +3,7 @@ package com.hrithikvish.curler.ui.screens.about
 import android.graphics.Bitmap
 import com.hrithikvish.curler.BuildConfig
 import com.hrithikvish.curler.data.model.ChangelogEntry
+import com.hrithikvish.curler.data.update.UpdateState
 
 data class AboutUiState(
     val versionName: String = BuildConfig.VERSION_NAME,
@@ -10,4 +11,5 @@ data class AboutUiState(
     val devImageUrl: String = "",
     val devImageBitmap: Bitmap? = null,
     val changelogEntries: List<ChangelogEntry> = emptyList(),
+    val updateState: UpdateState = UpdateState.Idle,
 )

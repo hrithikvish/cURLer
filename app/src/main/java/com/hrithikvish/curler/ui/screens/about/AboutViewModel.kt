@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hrithikvish.curler.data.image.ImageLoader
 import com.hrithikvish.curler.data.remoteconfig.AboutConfigRepository
+import com.hrithikvish.curler.data.update.UpdateManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,7 @@ import javax.inject.Inject
 class AboutViewModel @Inject constructor(
     private val aboutConfigRepository: AboutConfigRepository,
     private val imageLoader: ImageLoader,
+    private val updateManager: UpdateManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AboutUiState())
@@ -31,7 +33,12 @@ class AboutViewModel @Inject constructor(
             aboutConfigRepository.refresh()
             applyConfig()
         }
+        viewModelScope.launch {
+            updateManager.updateState.collect { state -> _uiState.update { it.copy(updateState = state) } }
+        }
     }
+
+    fun onUpdateAction() = updateManager.performAction()
 
     private fun applyConfig() {
         val config = aboutConfigRepository.getAboutConfig() ?: return

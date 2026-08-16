@@ -99,6 +99,18 @@
     <string name="about_feedback_feature">Suggest a feature</string>
     <string name="about_footer">Made with ♥︎ in India</string>
 
+    <!-- update -->
+    <string name="update_title_available">Update available</string>
+    <string name="update_subtitle_available">Ready to download</string>
+    <string name="update_title_downloading">Downloading update…</string>
+    <string name="update_subtitle_downloading_percent">%d%%</string>
+    <string name="update_subtitle_downloading_indeterminate">Downloading…</string>
+    <string name="update_title_downloaded">Update ready to install</string>
+    <string name="update_subtitle_downloaded">Restart to finish updating</string>
+    <string name="update_action_update">UPDATE</string>
+    <string name="update_action_restart">RESTART</string>
+    <string name="update_cd_badge">Update available</string>
+
     <!-- about: non-translatable links, not user-facing display copy -->
     <string name="about_url_github_profile" translatable="false">https://github.com/hrithikvish</string>
     <string name="about_url_github_bug" translatable="false">https://github.com/hrithikvish/cURLer/issues/new?labels=bug</string>

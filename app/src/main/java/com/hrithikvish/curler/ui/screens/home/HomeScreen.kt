@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,10 +62,14 @@ import com.hrithikvish.curler.data.model.HistoryEntry
 import com.hrithikvish.curler.data.model.HttpMethod
 import com.hrithikvish.curler.data.model.HttpRequestModel
 import com.hrithikvish.curler.data.model.HttpResponseModel
+import com.hrithikvish.curler.data.update.UpdateState
 import com.hrithikvish.curler.ui.components.CurlerFab
 import com.hrithikvish.curler.ui.components.EmptyState
 import com.hrithikvish.curler.ui.components.MethodChip
+import com.hrithikvish.curler.ui.components.UpdateDisplay
+import com.hrithikvish.curler.ui.components.UpdateStateIcon
 import com.hrithikvish.curler.ui.components.tapToFocus
+import com.hrithikvish.curler.ui.components.updateDisplayFor
 import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.PillShape
 import com.hrithikvish.curler.ui.theme.SignalError
@@ -85,6 +92,7 @@ fun HomeScreen(
         onAddRequest = onAddRequest,
         onHistoryRowClick = onHistoryRowClick,
         onAboutClick = onAboutClick,
+        onUpdateAction = viewModel::onUpdateAction,
         modifier = modifier,
     )
 }
@@ -97,8 +105,10 @@ private fun HomeContent(
     onAddRequest: () -> Unit,
     onHistoryRowClick: (Long) -> Unit,
     onAboutClick: () -> Unit,
+    onUpdateAction: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val updateDisplay = updateDisplayFor(uiState.updateState)
     Scaffold(
         modifier = modifier.imePadding(),
         topBar = {
@@ -116,11 +126,19 @@ private fun HomeContent(
                 },
                 actions = {
                     IconButton(onClick = onAboutClick) {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = stringResource(R.string.home_cd_about),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        BadgedBox(
+                            badge = {
+                                if (updateDisplay != null) {
+                                    Badge(containerColor = MaterialTheme.colorScheme.onSurface)
+                                }
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = stringResource(R.string.home_cd_about),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 },
             )
@@ -133,6 +151,13 @@ private fun HomeContent(
                     modifier = Modifier.size(28.dp),
                 )
             }
+        },
+        snackbarHost = {
+            UpdateBar(
+                display = updateDisplay,
+                onAction = onUpdateAction,
+                modifier = Modifier.padding(horizontal = 16.dp),
+            )
         },
     ) { padding ->
         Column(
@@ -170,6 +195,51 @@ private fun HomeContent(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UpdateBar(display: UpdateDisplay?, onAction: () -> Unit, modifier: Modifier = Modifier) {
+    if (display == null) return
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.inverseSurface)
+            .padding(horizontal = 16.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        UpdateStateIcon(
+            icon = display.icon,
+            tint = MaterialTheme.colorScheme.inverseOnSurface,
+            trackTint = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.25f),
+            modifier = Modifier.size(18.dp),
+        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = display.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.inverseOnSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = display.subtitle,
+                style = codeMono.copy(fontSize = 11.sp),
+                color = MaterialTheme.colorScheme.inverseOnSurface.copy(alpha = 0.75f),
+            )
+        }
+        if (display.actionLabel != null) {
+            TextButton(onClick = onAction) {
+                Text(
+                    text = display.actionLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.inverseOnSurface,
+                )
             }
         }
     }
@@ -344,6 +414,7 @@ private fun HomeScreenPreview() {
             onAddRequest = {},
             onHistoryRowClick = {},
             onAboutClick = {},
+            onUpdateAction = {},
         )
     }
 }
@@ -359,6 +430,24 @@ private fun HomeScreenEmptyPreview() {
             onAddRequest = {},
             onHistoryRowClick = {},
             onAboutClick = {},
+            onUpdateAction = {},
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenUpdateAvailablePreview() {
+    CurlerTheme {
+        HomeContent(
+            uiState = HomeUiState(updateState = UpdateState.Available(2)),
+            onSearchQueryChange = {},
+            onDelete = {},
+            onAddRequest = {},
+            onHistoryRowClick = {},
+            onAboutClick = {},
+            onUpdateAction = {},
+        )
+    }
+}
+

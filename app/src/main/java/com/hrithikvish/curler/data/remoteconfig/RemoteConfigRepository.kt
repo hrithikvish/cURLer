@@ -1,12 +1,9 @@
 package com.hrithikvish.curler.data.remoteconfig
 
-import com.google.android.gms.tasks.Task
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import kotlinx.coroutines.suspendCancellableCoroutine
+import com.hrithikvish.curler.data.common.await
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 // Thin, feature-agnostic wrapper around FirebaseRemoteConfig: fetch/activate
 // plumbing and raw value access live here once. Feature repositories (e.g.
@@ -28,14 +25,4 @@ class RemoteConfigRepository @Inject constructor(
     }
 
     fun getString(key: String): String = remoteConfig.getString(key)
-}
-
-private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
-    addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            continuation.resume(task.result)
-        } else {
-            continuation.resumeWithException(task.exception ?: IllegalStateException("Task failed with no exception"))
-        }
-    }
 }

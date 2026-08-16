@@ -2,6 +2,7 @@ package com.hrithikvish.curler
 
 import android.app.Application
 import com.hrithikvish.curler.data.remoteconfig.RemoteConfigRepository
+import com.hrithikvish.curler.data.update.UpdateManager
 import com.hrithikvish.curler.di.ApplicationScope
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
@@ -15,6 +16,9 @@ class CurlerApplication : Application() {
     lateinit var remoteConfigRepository: RemoteConfigRepository
 
     @Inject
+    lateinit var updateManager: UpdateManager
+
+    @Inject
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
@@ -25,6 +29,11 @@ class CurlerApplication : Application() {
         // from it — not just configured lazily on first injection.
         applicationScope.launch {
             remoteConfigRepository.refresh()
+        }
+        // Earliest possible update-availability signal — Home/About render
+        // the correct state on first composition instead of starting Idle.
+        applicationScope.launch {
+            updateManager.checkForUpdate()
         }
     }
 }

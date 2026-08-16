@@ -4,6 +4,12 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Required by the Play In-App Updates API to query the Play Store app
+         (package visibility on API 30+); not merged automatically by the AAR. -->
+    <queries>
+        <package android:name="com.android.vending" />
+    </queries>
+
     <application
         android:name=".CurlerApplication"
         android:allowBackup="true"
