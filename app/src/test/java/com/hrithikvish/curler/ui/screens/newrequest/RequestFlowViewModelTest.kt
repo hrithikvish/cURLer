@@ -30,7 +30,7 @@ class RequestFlowViewModelTest {
         Dispatchers.setMain(testDispatcher)
         dao = FakeHistoryDao()
         executor = FakeRequestExecutor()
-        viewModel = RequestFlowViewModel(HistoryRepository(dao), executor)
+        viewModel = RequestFlowViewModel(HistoryRepository(dao), executor, testDispatcher)
     }
 
     @After
@@ -52,20 +52,20 @@ class RequestFlowViewModelTest {
     }
 
     @Test
-    fun `parse failure returns false and sets inline error without building a request`() {
+    fun `parse failure returns false and sets inline error without building a request`() = runTest(testDispatcher) {
         viewModel.updatePasteText("not a curl command")
 
-        val success = viewModel.validateAndBuildRequest()
+        val success = viewModel.validateInternal()
 
         assertFalse(success)
         assertNotNull(viewModel.uiState.value.pasteError)
     }
 
     @Test
-    fun `valid paste input builds request and clears error`() {
+    fun `valid paste input builds request and clears error`() = runTest(testDispatcher) {
         viewModel.updatePasteText("curl https://api.example.com/users")
 
-        val success = viewModel.validateAndBuildRequest()
+        val success = viewModel.validateInternal()
 
         assertTrue(success)
         assertNull(viewModel.uiState.value.pasteError)
@@ -73,22 +73,22 @@ class RequestFlowViewModelTest {
     }
 
     @Test
-    fun `build tab with blank url fails validation`() {
+    fun `build tab with blank url fails validation`() = runTest(testDispatcher) {
         viewModel.selectTab(NewRequestTab.Build)
 
-        val success = viewModel.validateAndBuildRequest()
+        val success = viewModel.validateInternal()
 
         assertFalse(success)
         assertEquals(BuildUrlError.REQUIRED, viewModel.uiState.value.buildError)
     }
 
     @Test
-    fun `build tab with valid url succeeds`() {
+    fun `build tab with valid url succeeds`() = runTest(testDispatcher) {
         viewModel.selectTab(NewRequestTab.Build)
         viewModel.updateBuildUrl("https://api.example.com/orders")
         viewModel.updateBuildMethod(HttpMethod.POST)
 
-        val success = viewModel.validateAndBuildRequest()
+        val success = viewModel.validateInternal()
 
         assertTrue(success)
         assertEquals(HttpMethod.POST, viewModel.request.value.method)
@@ -98,7 +98,7 @@ class RequestFlowViewModelTest {
     @Test
     fun `send executes request and persists a history entry`() = runTest(testDispatcher) {
         viewModel.updatePasteText("curl https://api.example.com/users")
-        viewModel.validateAndBuildRequest()
+        viewModel.validateInternal()
 
         val result = viewModel.send()
 

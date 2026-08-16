@@ -8,11 +8,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -53,8 +56,11 @@ import com.hrithikvish.curler.data.query.QueryParamsParser
 import com.hrithikvish.curler.ui.components.CurlerFab
 import com.hrithikvish.curler.ui.components.EmptyState
 import com.hrithikvish.curler.ui.components.FabBottomClearance
+import com.hrithikvish.curler.ui.components.JsonLoadingIndicator
 import com.hrithikvish.curler.ui.components.JsonText
 import com.hrithikvish.curler.ui.components.KeyValueList
+import com.hrithikvish.curler.ui.components.isLargeBody
+import com.hrithikvish.curler.ui.components.rememberJsonLines
 import com.hrithikvish.curler.ui.components.MethodChip
 import com.hrithikvish.curler.ui.components.SegmentedControl
 import com.hrithikvish.curler.ui.theme.CurlerTheme
@@ -177,13 +183,23 @@ private fun ReviewContent(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 verticalAlignment = Alignment.Top,
             ) { page ->
-                val tabContentModifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(start = 20.dp, end = 20.dp, bottom = FabBottomClearance)
                 when (ReviewTab.entries[page]) {
-                    ReviewTab.Headers -> HeadersContent(request.headers, modifier = tabContentModifier)
-                    ReviewTab.Body -> BodyContent(request.body, modifier = tabContentModifier)
-                    ReviewTab.Query -> QueryContent(request.url, modifier = tabContentModifier)
+                    ReviewTab.Headers -> HeadersContent(
+                        request.headers,
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(start = 20.dp, end = 20.dp, bottom = FabBottomClearance),
+                    )
+                    ReviewTab.Body -> BodyContent(
+                        request.body,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    ReviewTab.Query -> QueryContent(
+                        request.url,
+                        modifier = Modifier
+                            .verticalScroll(rememberScrollState())
+                            .padding(start = 20.dp, end = 20.dp, bottom = FabBottomClearance),
+                    )
                 }
             }
         }
@@ -236,17 +252,43 @@ private fun HeadersContent(headers: List<Pair<String, String>>, modifier: Modifi
     }
 }
 
+private val BodyContentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = FabBottomClearance)
+
 @Composable
 private fun BodyContent(body: String?, modifier: Modifier = Modifier) {
-    if (body.isNullOrEmpty()) {
-        EmptyState(
+    when {
+        body.isNullOrEmpty() -> EmptyState(
             title = stringResource(R.string.review_empty_body_title),
             description = stringResource(R.string.review_empty_body_desc),
-            modifier = modifier,
-        )
-    } else {
-        Box(
             modifier = modifier
+                .verticalScroll(rememberScrollState())
+                .padding(BodyContentPadding),
+        )
+        isLargeBody(body) -> Box(
+            modifier = modifier
+                .padding(BodyContentPadding)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp)),
+        ) {
+            val lines = rememberJsonLines(body)
+            if (lines == null) {
+                JsonLoadingIndicator(modifier = Modifier.fillMaxSize())
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+                    items(lines.size) { index ->
+                        Text(
+                            text = lines[index],
+                            style = codeMono,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+            }
+        }
+        else -> Box(
+            modifier = modifier
+                .verticalScroll(rememberScrollState())
+                .padding(BodyContentPadding)
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(14.dp))
                 .padding(14.dp),

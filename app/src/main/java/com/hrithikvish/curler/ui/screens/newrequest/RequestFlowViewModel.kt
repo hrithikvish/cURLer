@@ -12,6 +12,7 @@ import com.hrithikvish.curler.data.model.ParsedCurlRequest
 import com.hrithikvish.curler.data.network.RequestExecutor
 import com.hrithikvish.curler.ui.screens.review.ReviewCapable
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -20,12 +21,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class RequestFlowViewModel @Inject constructor(
     private val historyRepository: HistoryRepository,
     private val requestExecutor: RequestExecutor,
+    private val defaultDispatcher: CoroutineDispatcher,
 ) : ViewModel(), ReviewCapable {
 
     private val _uiState = MutableStateFlow(RequestFlowUiState())
@@ -105,11 +108,23 @@ class RequestFlowViewModel @Inject constructor(
     }
 
     /** Called by both Paste's "Parse & validate" and Build's "Continue to review". */
-    fun validateAndBuildRequest(): Boolean {
+    fun validateAndBuildRequest(onValidated: () -> Unit) {
+        viewModelScope.launch {
+            if (validateInternal()) onValidated()
+        }
+    }
+
+    /**
+     * Parsing (regex tokenizing + JSON validation) runs off the main thread since
+     * pasted curl commands can carry multi-KB bodies that would otherwise jank the tap.
+     */
+    internal suspend fun validateInternal(): Boolean {
         val state = _uiState.value
-        return when (state.selectedTab) {
-            NewRequestTab.Paste -> validateFromPaste(state)
-            NewRequestTab.Build -> validateFromBuild(state)
+        return withContext(defaultDispatcher) {
+            when (state.selectedTab) {
+                NewRequestTab.Paste -> validateFromPaste(state)
+                NewRequestTab.Build -> validateFromBuild(state)
+            }
         }
     }
 

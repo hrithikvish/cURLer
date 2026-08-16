@@ -1,5 +1,24 @@
 import com.android.build.api.variant.FilterConfiguration.FilterType
 import com.android.build.api.variant.impl.VariantOutputImpl
+import java.util.Properties
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystorePropertiesExist = keystorePropertiesFile.exists()
+val keystoreProperties = Properties().apply {
+    if (keystorePropertiesExist) {
+        keystorePropertiesFile.inputStream().use { load(it) }
+    }
+}
+
+// Only release-type tasks need real signing credentials — don't fail
+// assembleDebug/test/lint (or CI, which doesn't have this file) just because
+// keystore.properties is absent, but fail fast and clearly if someone
+// actually tries to build/sign a release without it.
+val isBuildingRelease = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+check(keystorePropertiesExist || !isBuildingRelease) {
+    "keystore.properties not found at ${keystorePropertiesFile.path} — required to sign the release build. " +
+        "Create it with storeFile, storePassword, keyAlias, and keyPassword properties."
+}
 
 plugins {
     alias(libs.plugins.android.application)
@@ -27,10 +46,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            create("release") {
+                storeFile = rootProject.file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
-                enable = false
+                enable = true
+            }
+            if (keystorePropertiesFile.exists()) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
@@ -48,6 +81,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -79,6 +113,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.config)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines.android)

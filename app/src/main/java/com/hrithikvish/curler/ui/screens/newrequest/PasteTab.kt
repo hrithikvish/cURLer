@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,6 +50,8 @@ import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.PillShape
 import com.hrithikvish.curler.ui.theme.codeMono
 import kotlinx.coroutines.launch
+
+private const val PasteErrorMaxLines = 3
 
 @Composable
 fun PasteTab(
@@ -116,6 +119,8 @@ fun PasteTab(
                 error,
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
+                maxLines = PasteErrorMaxLines,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 20.dp),
             )
         }

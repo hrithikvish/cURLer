@@ -7,6 +7,9 @@ sealed interface CurlerRoute {
     @Serializable
     data object Home : CurlerRoute
 
+    @Serializable
+    data object About : CurlerRoute
+
     // requestFlow graph: NewRequest (start) -> Review -> Response,
     // all sharing one RequestFlowViewModel scoped to this graph.
     @Serializable

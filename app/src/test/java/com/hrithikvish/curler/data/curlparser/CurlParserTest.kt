@@ -158,4 +158,16 @@ class CurlParserTest {
         assertEquals("http://x.com/api?model=motorola edge 50 neo&ver=16", result.url)
         assertEquals(listOf("A" to "1"), result.headers)
     }
+
+    @Test
+    fun `ansi-c quoted data body with embedded spaces does not swallow the url`() {
+        val result = CurlParser.parse(
+            "curl -X POST --data \$'{\"name\":\"Jane Doe\",\"note\":\"has spaces\"}' https://api.example.com/orders",
+        )
+        require(result is ParsedCurlRequest.Success)
+        assertEquals(HttpMethod.POST, result.method)
+        assertEquals("https://api.example.com/orders", result.url)
+        assertEquals("""{"name":"Jane Doe","note":"has spaces"}""", result.body)
+        assertTrue(result.bodyIsValidJson)
+    }
 }
