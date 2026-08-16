@@ -1,4 +1,4 @@
-name: Build APK
+name: Upload to App Tester
 
 on:
   workflow_dispatch:
