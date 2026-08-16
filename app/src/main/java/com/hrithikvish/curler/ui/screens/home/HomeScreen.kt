@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -72,6 +73,7 @@ import com.hrithikvish.curler.ui.theme.codeMono
 fun HomeScreen(
     onAddRequest: () -> Unit,
     onHistoryRowClick: (Long) -> Unit,
+    onAboutClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
@@ -82,6 +84,7 @@ fun HomeScreen(
         onDelete = viewModel::deleteEntry,
         onAddRequest = onAddRequest,
         onHistoryRowClick = onHistoryRowClick,
+        onAboutClick = onAboutClick,
         modifier = modifier,
     )
 }
@@ -93,6 +96,7 @@ private fun HomeContent(
     onDelete: (HistoryEntry) -> Unit,
     onAddRequest: () -> Unit,
     onHistoryRowClick: (Long) -> Unit,
+    onAboutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -108,6 +112,15 @@ private fun HomeContent(
                         )
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.home_title), style = MaterialTheme.typography.titleLarge)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onAboutClick) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = stringResource(R.string.home_cd_about),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                     }
                 },
             )
@@ -330,6 +343,7 @@ private fun HomeScreenPreview() {
             onDelete = {},
             onAddRequest = {},
             onHistoryRowClick = {},
+            onAboutClick = {},
         )
     }
 }
@@ -344,6 +358,7 @@ private fun HomeScreenEmptyPreview() {
             onDelete = {},
             onAddRequest = {},
             onHistoryRowClick = {},
+            onAboutClick = {},
         )
     }
 }

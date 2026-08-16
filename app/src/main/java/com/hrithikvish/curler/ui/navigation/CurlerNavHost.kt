@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.hrithikvish.curler.ui.screens.about.AboutScreen
 import com.hrithikvish.curler.ui.screens.home.HomeScreen
 import com.hrithikvish.curler.ui.screens.newrequest.NewRequestScreen
 import com.hrithikvish.curler.ui.screens.newrequest.RequestFlowViewModel
@@ -40,7 +41,12 @@ fun CurlerNavHost(
             HomeScreen(
                 onAddRequest = { navController.navigate(CurlerRoute.RequestFlowGraph) },
                 onHistoryRowClick = { id -> navController.navigate(CurlerRoute.HistoryFlowGraph(id)) },
+                onAboutClick = { navController.navigate(CurlerRoute.About) },
             )
+        }
+
+        composable<CurlerRoute.About> {
+            AboutScreen(onBack = { navController.popBackStack() })
         }
 
         navigation<CurlerRoute.RequestFlowGraph>(startDestination = CurlerRoute.NewRequest) {

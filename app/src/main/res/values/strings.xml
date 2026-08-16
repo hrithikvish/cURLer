@@ -78,4 +78,31 @@
     <string name="response_error_title">Request failed</string>
     <string name="response_error_description_fallback">Something went wrong while sending this request.</string>
     <string name="response_empty_body">No body to show</string>
+
+    <!-- about -->
+    <string name="about_title">About</string>
+    <string name="home_cd_about">About</string>
+    <string name="about_tagline">Paste a curl. Get a request.</string>
+    <string name="about_version_format">v%1$s · build %2$d</string>
+    <string name="about_changelog_label">Changelog</string>
+    <string name="about_changelog_latest_badge">Latest</string>
+    <string name="about_changelog_view_all">View all changelogs</string>
+    <string name="about_dev_section_label">Designed &amp; developed by</string>
+    <string name="about_dev_name">Hrithik Vishwakarma</string>
+    <string name="about_dev_role">Mumbai, India</string>
+    <string name="about_dev_bio">Built cURLer because pasting curl commands into Postman on my phone, on the go, was more annoying than the problem it solved. Also my side-project itch.</string>
+    <string name="about_link_github">GitHub</string>
+    <string name="about_link_linkedin">LinkedIn</string>
+    <string name="about_link_email">Email</string>
+    <string name="about_feedback_label">Feedback</string>
+    <string name="about_feedback_bug">Report a bug</string>
+    <string name="about_feedback_feature">Suggest a feature</string>
+    <string name="about_footer">Made with ♥︎ in India</string>
+
+    <!-- about: non-translatable links, not user-facing display copy -->
+    <string name="about_url_github_profile" translatable="false">https://github.com/hrithikvish</string>
+    <string name="about_url_github_bug" translatable="false">https://github.com/hrithikvish/cURLer/issues/new?labels=bug</string>
+    <string name="about_url_github_feature" translatable="false">https://github.com/hrithikvish/cURLer/issues/new?labels=enhancement</string>
+    <string name="about_url_linkedin" translatable="false">https://www.linkedin.com/in/hrithik-vishwakarma-4764ba1b6/</string>
+    <string name="about_dev_email" translatable="false">hrithikvish.dev@gmail.com</string>
 </resources>
