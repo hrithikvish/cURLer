@@ -1,4 +1,10 @@
 [versions]
+versionCode = "1"
+versionName = "1.0"
+compileSdk = "37"
+minSdk = "29"
+targetSdk = "37"
+
 agp = "9.4.0-alpha08"
 coreKtx = "1.19.0"
 junit = "4.13.2"
