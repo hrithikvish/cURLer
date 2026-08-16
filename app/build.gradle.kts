@@ -20,6 +20,12 @@ check(keystorePropertiesExist || !isBuildingRelease) {
         "Create it with storeFile, storePassword, keyAlias, and keyPassword properties."
 }
 
+// AGP 9.4.0-alpha08 bug (https://issuetracker.google.com/issues/402800800):
+// splits.abi is supposed to be ignored when building an app bundle, but R8's
+// resource shrinking still runs once per ABI split and collides in
+// buildReleasePreBundle. Keep splits.abi off for bundle tasks until fixed upstream.
+val isBuildingBundle = gradle.startParameter.taskNames.any { it.contains("bundle", ignoreCase = true) }
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -69,7 +75,7 @@ android {
     }
     splits {
         abi {
-            isEnable = true
+            isEnable = !isBuildingBundle
             reset()
             include("armeabi-v7a", "arm64-v8a")
             isUniversalApk = true
