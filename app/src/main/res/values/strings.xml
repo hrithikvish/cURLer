@@ -117,4 +117,16 @@
     <string name="about_url_github_feature" translatable="false">https://github.com/hrithikvish/cURLer/issues/new?labels=enhancement</string>
     <string name="about_url_linkedin" translatable="false">https://www.linkedin.com/in/hrithik-vishwakarma-4764ba1b6/</string>
     <string name="about_dev_email" translatable="false">hrithikvish.dev@gmail.com</string>
+
+    <!-- about: policies -->
+    <string name="about_policies_label">Policies</string>
+    <string name="about_policies_privacy">Privacy Policy</string>
+    <string name="about_policies_terms">Terms of Service</string>
+    <string name="about_url_privacy_policy" translatable="false">https://hrithikvish.github.io/cURLer/privacy-policy.html</string>
+    <string name="about_url_terms_of_service" translatable="false">https://hrithikvish.github.io/cURLer/terms-of-service.html</string>
+
+    <!-- about: credits -->
+    <string name="about_credits_label">Credits</string>
+    <string name="about_credits_icons">Icons by SVG Repo</string>
+    <string name="about_url_svgrepo" translatable="false">https://www.svgrepo.com/</string>
 </resources>

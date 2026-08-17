@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.hrithikvish.curler.ui.screens.about
 
 import android.content.Context
@@ -16,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -32,11 +29,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,8 +46,6 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -67,8 +60,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.hrithikvish.curler.R
 import com.hrithikvish.curler.data.model.ChangelogEntry
 import com.hrithikvish.curler.data.update.UpdateState
+import com.hrithikvish.curler.ui.components.AppBottomSheet
 import com.hrithikvish.curler.ui.components.UpdateDisplay
 import com.hrithikvish.curler.ui.components.UpdateStateIcon
+import com.hrithikvish.curler.ui.components.WebViewBottomSheet
 import com.hrithikvish.curler.ui.components.updateDisplayFor
 import com.hrithikvish.curler.ui.theme.CurlerTheme
 import com.hrithikvish.curler.ui.theme.PillShape
@@ -111,6 +106,7 @@ fun AboutScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AboutContent(
     uiState: AboutUiState,
@@ -182,6 +178,47 @@ private fun AboutContent(
                     icon = painterResource(R.drawable.ic_idea),
                     label = stringResource(R.string.about_feedback_feature),
                     onClick = { openUrl(context, githubFeatureUrl) },
+                )
+            }
+
+            SectionLabel(stringResource(R.string.about_policies_label))
+            var showPrivacySheet by remember { mutableStateOf(false) }
+            var showTermsSheet by remember { mutableStateOf(false) }
+            Column(modifier = Modifier.fillMaxWidth()) {
+                FeedbackRow(
+                    icon = painterResource(R.drawable.ic_shield_check),
+                    label = stringResource(R.string.about_policies_privacy),
+                    onClick = { showPrivacySheet = true },
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                FeedbackRow(
+                    icon = painterResource(R.drawable.ic_document),
+                    label = stringResource(R.string.about_policies_terms),
+                    onClick = { showTermsSheet = true },
+                )
+            }
+            if (showPrivacySheet) {
+                WebViewBottomSheet(
+                    title = stringResource(R.string.about_policies_privacy),
+                    url = stringResource(R.string.about_url_privacy_policy),
+                    onDismiss = { showPrivacySheet = false },
+                )
+            }
+            if (showTermsSheet) {
+                WebViewBottomSheet(
+                    title = stringResource(R.string.about_policies_terms),
+                    url = stringResource(R.string.about_url_terms_of_service),
+                    onDismiss = { showTermsSheet = false },
+                )
+            }
+
+            SectionLabel(stringResource(R.string.about_credits_label))
+            val svgRepoUrl = stringResource(R.string.about_url_svgrepo)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                FeedbackRow(
+                    icon = painterResource(R.drawable.ic_lawnicons),
+                    label = stringResource(R.string.about_credits_icons),
+                    onClick = { openUrl(context, svgRepoUrl) },
                 )
             }
 
@@ -343,49 +380,22 @@ private fun ViewAllChangelogRow(onClick: () -> Unit, modifier: Modifier = Modifi
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ChangelogSheet(
     entries: List<ChangelogEntry>,
     onDismiss: () -> Unit
 ) {
-    val maxSheetHeight = with(LocalDensity.current) {
-        LocalWindowInfo.current.containerSize.height.toDp()
-    } * 0.8f
-
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        dragHandle = null,
+    AppBottomSheet(
+        title = stringResource(R.string.about_changelog_label),
+        onDismiss = onDismiss,
     ) {
-        Column(
-            modifier = Modifier
-                .heightIn(max = maxSheetHeight)
-                .padding(horizontal = 12.dp, vertical = 4.dp),
-        ) {
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
-                text = stringResource(R.string.about_changelog_label),
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                entries.forEachIndexed { index, entry ->
-                    ChangelogRow(entry = entry)
-                    if (index < entries.lastIndex) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
+        entries.forEachIndexed { index, entry ->
+            ChangelogRow(entry = entry)
+            if (index < entries.lastIndex) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             }
         }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
